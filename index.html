@@ -915,7 +915,7 @@ const Data = (() => {
   });
 
   /* ---------- load + עדכונים חיים מ-Firestore ---------- */
-  const sig = (posts) => posts.map((p) => [p.id, p.created, p.title, p.likes, p.tags.join(','), p.links.map((l) => l.id + ':' + l.likes).join(',')].join(':')).join('|');
+  const sig = (posts) => posts.map((p) => [p.id, p.created, p.type, p.title, p.desc, p.url, p.image, p.usage, p.snippet, p.likes, p.tags.join(','), p.links.map((l) => [l.id, l.name, l.url, l.title, l.likes].join(':')).join(',')].join('|')).join('~');
 
   function syncLiked(posts) {
     const me = Data.currentUid();
