@@ -1,0 +1,46 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /* פוסט חדש: חייב להיות מחובר (גם אנונימית), בלי לייקים/קישורים מוזרקים */
+    function validNewPost() {
+      let d = request.resource.data;
+      return isSignedIn()
+        && d.createdBy == request.auth.uid
+        && (d.type == 'tool' || d.type == 'prompt')
+        && d.title is string
+        && d.title.size() > 0
+        && d.title.size() <= 80
+        && d.likes == 0
+        && d.likedBy.size() == 0
+        && d.links.size() == 0
+        && d.tags is list
+        && d.tags.size() <= 12;
+    }
+
+    match /posts/{postId} {
+      /* הפיד ציבורי לקריאה */
+      allow read: if true;
+
+      allow create: if validNewPost();
+
+      /* עדכון מותר רק לשדות של לייקים/יצירות, ולא לשינוי תוכן הפוסט */
+      allow update: if isSignedIn()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes', 'likedBy', 'links'])
+        && request.resource.data.likes >= resource.data.likes
+        && request.resource.data.likes <= resource.data.likes + 1
+        && request.resource.data.likedBy.size() >= resource.data.likedBy.size()
+        && request.resource.data.likedBy.size() <= resource.data.likedBy.size() + 1
+        && request.resource.data.links.size() >= resource.data.links.size()
+        && request.resource.data.links.size() <= resource.data.links.size() + 1;
+
+      /* מחיקה רק מהקונסולה/מנהל, לא מהאתר */
+      allow delete: if false;
+    }
+  }
+}
