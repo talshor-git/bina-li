@@ -39,8 +39,8 @@ service cloud.firestore {
         && request.resource.data.links.size() >= resource.data.links.size()
         && request.resource.data.links.size() <= resource.data.links.size() + 1;
 
-      /* מחיקה רק מהקונסולה/מנהל, לא מהאתר */
-      allow delete: if false;
+      /* רק מי שיצר את הפוסט יכול למחוק אותו */
+      allow delete: if isSignedIn() && resource.data.createdBy == request.auth.uid;
     }
   }
 }
