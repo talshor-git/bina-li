@@ -31,13 +31,15 @@ service cloud.firestore {
 
       /* עדכון מותר רק לשדות של לייקים/יצירות, ולא לשינוי תוכן הפוסט */
       allow update: if isSignedIn()
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes', 'likedBy', 'links'])
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes', 'likedBy', 'links', 'tags'])
         && request.resource.data.likes >= resource.data.likes
         && request.resource.data.likes <= resource.data.likes + 1
         && request.resource.data.likedBy.size() >= resource.data.likedBy.size()
         && request.resource.data.likedBy.size() <= resource.data.likedBy.size() + 1
         && request.resource.data.links.size() >= resource.data.links.size()
-        && request.resource.data.links.size() <= resource.data.links.size() + 1;
+        && request.resource.data.links.size() <= resource.data.links.size() + 1
+        && request.resource.data.tags is list
+        && request.resource.data.tags.size() <= 12;
 
       /* מחיקה מהאתר: משתמש מחובר (מצב מנהל נבדק בצד הלקוח) */
       allow delete: if isSignedIn();
